@@ -6,13 +6,19 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram import F
 import re
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database.session import async_session_maker
+from middlewares.db import DatabaseSessionMiddleware
+from utils.config_reader import config
+
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
 dp = Dispatcher()
-bot = Bot(token="8239441221:AAHyBufL2Mevz8AJopaBp4QygZ50", default=DefaultBotProperties(parse_mode='html'))
+bot = Bot(token=config.bot_token.get_secret_value(), default=DefaultBotProperties(parse_mode='html'))
 
 
 @dp.message(F.text, F.chat.type.in_({"group", "supergroup"}))
-async def message_handler(message: types.Message):
+async def message_handler(message: types.Message, session: AsyncSession):
     print(message.chat)
     if "=" not in message.text and "-" not in message.text and "+" not in message.text:
         return
@@ -73,6 +79,9 @@ async def get_digits(text):
 
 
 async def main(_bot):  # Запуск процесса поллинга новых апдейтов
+    dp.message.outer_middleware(DatabaseSessionMiddleware(async_session_maker))
+    dp.callback_query.outer_middleware(DatabaseSessionMiddleware(async_session_maker))
+
     await dp.start_polling(_bot)
 
 
