@@ -1,0 +1,11 @@
+services:
+  buhgalter-9000:
+    container_name: buhgalter-9000
+    build: "."
+    restart: "always"
+
+    volumes:
+      - buhgalter-9000-database:/usr/src/app/data
+
+volumes:
+  buhgalter-9000-database:
